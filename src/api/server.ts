@@ -113,7 +113,15 @@ app.delete("/products/:id", async (req: Request, res: Response) => {
 app.get("/orders", async (req: Request, res: Response) => {
   const r = req as RequestWithSupabase
   const db = r.supabase as any
-  const { data, error } = await db.from("orders").select("*");
+  const status = String(req.query.status || '').trim()
+
+  // If a status filter is provided, apply it (e.g. ?status=pending or ?status=approved)
+  let query = db.from("orders").select("*")
+  if (status) {
+    query = query.eq('status', status)
+  }
+
+  const { data, error } = await query;
 
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
@@ -178,6 +186,17 @@ app.post('/orders/:id/approve', async (req: Request, res: Response) => {
   }
 
   return res.json(updated)
+})
+
+// Dedicated endpoint to list pending orders
+app.get('/orders/pending', async (req: Request, res: Response) => {
+  const r = req as RequestWithSupabase
+  const db = r.supabase as any
+
+  const { data, error } = await db.from('orders').select('*').eq('status', 'pending')
+
+  if (error) return res.status(500).json({ error: error.message })
+  return res.json(data)
 })
 
 export default app;
