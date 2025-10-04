@@ -1,0 +1,33 @@
+{
+  "name": "ecommerce-supabase-ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+  "test:db": "ts-node src/db/testConnection.ts",
+  "dev": "ts-node src/index.ts",
+    "start": "node ./dist/index.js",
+    "functions:deploy": "echo 'Use supabase functions deploy <name> to deploy an edge function'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/body-parser": "^1.19.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.6.2",
+    "@types/swagger-ui-express": "^4.1.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.58.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "swagger-ui-express": "^4.6.3"
+  }
+}

@@ -1,0 +1,486 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "E-commerce Supabase API",
+    "version": "1.0.0",
+    "description": "Backend API for an e-commerce system using Supabase. Features RLS policies, database functions, views, and Edge Functions for automation."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    { "name": "customers", "description": "Customer management with RLS" },
+    { "name": "products", "description": "Product management with RLS" },
+    { "name": "payment-methods", "description": "Payment methods configuration" },
+    { "name": "orders", "description": "Order processing with automatic total calculation" },
+    { "name": "automation", "description": "Edge Functions for order processing" }
+  ],
+  "paths": {
+    "/customers": {
+      "get": {
+        "tags": ["customers"],
+        "summary": "List all customers",
+        "description": "Returns all customers. Protected by RLS - admin only.",
+        "responses": {
+          "200": {
+            "description": "List of customers",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CustomersArray" },
+                "example": [
+                  { "id": "123e4567-e89b-12d3-a456-426614174002", "email": "john@example.com", "name": "John Doe" }
+                ]
+              }
+            }
+          },
+          "403": { "description": "Forbidden - requires admin access" }
+        }
+      },
+      "post": {
+        "tags": ["customers"],
+        "summary": "Create customer",
+        "description": "Register a new customer.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CustomerCreate" },
+              "example": {
+                "email": "john@example.com",
+                "name": "John Doe"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Customer" } } }
+          }
+        }
+      }
+    },
+    "/customers/{id}": {
+      "get": {
+        "tags": ["customers"],
+        "summary": "Get customer by ID",
+        "description": "Get customer details by ID. Protected by RLS.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer details",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Customer" } } }
+          },
+          "404": { "description": "Customer not found" }
+        }
+      },
+      "put": {
+        "tags": ["customers"],
+        "summary": "Update customer",
+        "description": "Update customer details. Protected by RLS.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CustomerCreate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer updated",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Customer" } } }
+          },
+          "404": { "description": "Customer not found" }
+        }
+      },
+      "delete": {
+        "tags": ["customers"],
+        "summary": "Delete customer",
+        "description": "Delete a customer. Protected by RLS - admin only.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "204": { "description": "Customer deleted" },
+          "404": { "description": "Customer not found" }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "tags": ["products"],
+        "summary": "List all products",
+        "description": "Returns all products. Protected by RLS - public read access.",
+        "responses": {
+          "200": {
+            "description": "List of products",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductsArray" },
+                "example": [
+                  { "id": "123e4567-e89b-12d3-a456-426614174000", "name": "T-Shirt", "sku": "TS001", "price": 29.99, "stock": 100, "description": "Cotton t-shirt" }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["products"],
+        "summary": "Create product",
+        "description": "Create a new product. Protected by RLS - admin only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProductCreate" },
+              "example": {
+                "name": "T-Shirt",
+                "sku": "TS001",
+                "price": 29.99,
+                "stock": 100,
+                "description": "Cotton t-shirt"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
+          "403": { "description": "Forbidden - requires admin access" }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "tags": ["products"],
+        "summary": "Get product by ID",
+        "description": "Get product details by ID.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
+          "404": { "description": "Product not found" }
+        }
+      },
+      "put": {
+        "tags": ["products"],
+        "summary": "Update product",
+        "description": "Update product details. Protected by RLS - admin only.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProductCreate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } }
+          },
+          "404": { "description": "Product not found" }
+        }
+      },
+      "delete": {
+        "tags": ["products"],
+        "summary": "Delete product",
+        "description": "Delete a product. Protected by RLS - admin only.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "204": { "description": "Product deleted" },
+          "404": { "description": "Product not found" }
+        }
+      }
+    },
+    "/payment-methods": {
+      "get": {
+        "tags": ["payment-methods"],
+        "summary": "List payment methods",
+        "description": "Get all available payment methods",
+        "responses": {
+          "200": {
+            "description": "List of payment methods",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PaymentMethod" }
+                },
+                "example": [
+                  { "id": "credit_card", "name": "Credit Card" },
+                  { "id": "pix", "name": "PIX" }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment-methods/{id}": {
+    },
+    "/orders": {
+      "get": {
+        "tags": ["orders"],
+        "summary": "List orders",
+        "description": "List orders with optional customer_id filter. Protected by RLS - users see own orders, admin sees all.",
+        "parameters": [
+          { "name": "customer_id", "in": "query", "schema": { "type": "string", "format": "uuid" }, "description": "Filter by customer" }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of orders with automatic total calculation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrdersArray" },
+                "example": [{
+                  "id": "123e4567-e89b-12d3-a456-426614174003",
+                  "customer_id": "123e4567-e89b-12d3-a456-426614174002",
+                  "total": 49.98,
+                  "status": "pending",
+                  "items": [
+                    { "product_id": "123e4567-e89b-12d3-a456-426614174000", "quantity": 1, "unit_price": 29.99 },
+                    { "product_id": "123e4567-e89b-12d3-a456-426614174001", "quantity": 1, "unit_price": 19.99 }
+                  ]
+                }]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["orders"],
+        "summary": "Create order",
+        "description": "Create a new order. Triggers automatic total calculation, stock update, and confirmation email.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OrderCreate" },
+              "example": {
+                "customer_id": "123e4567-e89b-12d3-a456-426614174002",
+                "items": [
+                  { "product_id": "123e4567-e89b-12d3-a456-426614174000", "quantity": 1 },
+                  { "product_id": "123e4567-e89b-12d3-a456-426614174001", "quantity": 1 }
+                ],
+                "payment_method": "credit_card"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created with calculated total",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } }
+          },
+          "400": { "description": "Invalid input or insufficient stock" }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "tags": ["orders"],
+        "summary": "Get order by ID",
+        "description": "Get order details using order summary view. Protected by RLS.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details from view_order_summary",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderSummary" } } }
+          },
+          "403": { "description": "Forbidden - not owner or admin" },
+          "404": { "description": "Order not found" }
+        }
+      },
+      "delete": {
+        "tags": ["orders"],
+        "summary": "Delete order",
+        "description": "Delete an order. Protected by RLS - admin only.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "204": { "description": "Order deleted" },
+          "404": { "description": "Order not found" }
+        }
+      }
+    },
+    "/orders/customer/{customerId}": {
+      "get": {
+        "tags": ["orders"],
+        "summary": "List customer orders",
+        "description": "Get all orders for a specific customer. Protected by RLS.",
+        "parameters": [
+          { "name": "customerId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of customer orders",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrdersArray" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}/export": {
+      "get": {
+        "tags": ["automation"],
+        "summary": "Export order CSV",
+        "description": "Edge Function: Generate CSV export of order details",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file",
+            "content": { "text/csv": { "schema": { "type": "string" } } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" }
+        }
+      },
+      "CustomersArray": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/Customer" }
+      },
+      "CustomerCreate": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "sku": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "stock": { "type": "integer" }
+        }
+      },
+      "ProductsArray": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/Product" }
+      },
+      "ProductCreate": {
+        "type": "object",
+        "required": ["name", "price"],
+        "properties": {
+          "sku": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "stock": { "type": "integer", "default": 0 }
+        }
+      },
+      "PaymentMethod": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "enum": ["credit_card", "pix"] },
+          "name": { "type": "string" }
+        }
+      },
+      "PaymentMethodCreate": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string", "enum": ["credit_card", "pix"] },
+          "name": { "type": "string" }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "required": ["product_id", "quantity"],
+        "properties": {
+          "product_id": { "type": "string", "format": "uuid" },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "unit_price": { "type": "number", "readOnly": true }
+        }
+      },
+      "OrderCreate": {
+        "type": "object",
+        "required": ["customer_id", "items"],
+        "properties": {
+          "customer_id": { "type": "string", "format": "uuid" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderItem" },
+            "minItems": 1
+          },
+          "payment_method": {
+            "type": "string",
+            "enum": ["credit_card", "pix"]
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "customer_id": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["pending", "confirmed", "shipped", "delivered"] },
+          "total": { "type": "number", "readOnly": true },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderItem" }
+          }
+        }
+      },
+      "OrdersArray": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/Order" }
+      },
+      "OrderSummary": {
+        "type": "object",
+        "description": "Order summary from database view",
+        "properties": {
+          "order_id": { "type": "string", "format": "uuid" },
+          "customer_name": { "type": "string" },
+          "total": { "type": "number" },
+          "status": { "type": "string" },
+          "item_count": { "type": "integer" }
+        }
+      }
+    }
+  }
+}
